@@ -27,7 +27,15 @@ const SESSION_SECONDS = 60 * 60 * 24 * 7;   // sign in again after a week
 const RECHECK_SECONDS = 60 * 60;            // re-verify membership hourly
 
 const enc = new TextEncoder();
-const env = (n: string) => Netlify.env.get(n) || Netlify.env.get(n.toLowerCase());
+// TEMPORARY, FOR TESTING ONLY: values pasted here are used when the Netlify env var of the same
+// name is unset. They live in git history once committed. Before going live, empty this block,
+// set the real values in Netlify env vars, and rotate the client secret.
+const TEST_CONFIG: Record<string, string> = {
+  WHOP_CLIENT_ID: "",
+  WHOP_CLIENT_SECRET: "",
+  WHOP_PRODUCT_IDS: "",
+};
+const env = (n: string) => Netlify.env.get(n) || Netlify.env.get(n.toLowerCase()) || TEST_CONFIG[n] || undefined;
 const now = () => Math.floor(Date.now() / 1000);
 
 const b64u = (b: ArrayBuffer | Uint8Array) =>
