@@ -33,6 +33,7 @@ const enc = new TextEncoder();
 const TEST_CONFIG: Record<string, string> = {
   WHOP_CLIENT_ID: "app_xi5gOpJ4VUOfqU",
   WHOP_CLIENT_SECRET: "apik_WGwaw9gNRumXh_A2178259_C_36b5aa9bfbcfb4db73857c956dd4655e81817c16a43edb8f747bbb031791db",
+  WHOP_API_KEY: "apik_XgfqTWnKWkMRU_C4045024_C_b02d1f0d1466f4fe78bcbb79a1592a2cc36781979133c21bf486364098ddc3",
   WHOP_PRODUCT_IDS: "prod_MatOC5m0qlB9J",
 };
 const env = (n: string) => Netlify.env.get(n) || Netlify.env.get(n.toLowerCase()) || TEST_CONFIG[n] || undefined;
