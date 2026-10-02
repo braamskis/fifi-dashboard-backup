@@ -141,11 +141,19 @@ async function callback(req: Request): Promise<Response> {
       client_id: env("WHOP_CLIENT_ID")!, client_secret: env("WHOP_CLIENT_SECRET")!, code_verifier: tmp.verifier,
     }),
   });
-  if (!tokenRes.ok) return signInPage("Whop sign-in failed. Try again.");
+  if (!tokenRes.ok) {
+    // TEMPORARY DEBUG: show Whop's error on the page (contains no secrets) and in Netlify's edge log.
+    const detail = (await tokenRes.text()).slice(0, 300);
+    console.log(`whop token exchange failed: ${tokenRes.status} ${detail}`);
+    return signInPage(`Whop sign-in failed (token step, HTTP ${tokenRes.status}): ${detail.replace(/[<>&]/g, "")}`);
+  }
   const { access_token } = await tokenRes.json();
   const infoRes = await fetch(WHOP_USERINFO, { headers: { Authorization: `Bearer ${access_token}` } });
   const sub = infoRes.ok ? (await infoRes.json()).sub : null;
-  if (!sub) return signInPage("Couldn't read your Whop account. Try again.");
+  if (!sub) {
+    console.log(`whop userinfo failed: ${infoRes.status}`);
+    return signInPage(`Couldn't read your Whop account (userinfo step, HTTP ${infoRes.status}).`);
+  }
   if (!(await isMember(sub))) return notMemberPage();
   const session = await sign({ sub, iat: now(), chk: now() });
   const headers = new Headers({ Location: "/", "Cache-Control": "no-store" });
