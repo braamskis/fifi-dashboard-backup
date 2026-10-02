@@ -2,7 +2,7 @@
   publish = "site"
   command = ""
 
-# The alert function reads the scan straight off disk instead of through the login gate
+# The alert function reads the scan straight off disk instead of through the Whop gate
 [functions]
   included_files = ["site/scan.json"]
 

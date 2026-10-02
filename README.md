@@ -22,7 +22,24 @@ site/                     the dashboard Netlify publishes
 4. Discord alerts: in your Discord server, Channel settings -> Integrations -> Webhooks -> New webhook -> Copy URL. In GitHub: Settings -> Secrets and variables -> Actions -> New secret named `DISCORD_WEBHOOK_URL`, paste the URL.
 5. First run: Actions -> FiFi's Dashboard scan -> Run workflow, set backfill to `60`. That rebuilds 60 days of past scans from price history so the scorecard has data on day one. It takes 30-60 minutes; later nightly runs take about 15-25.
 
-After that the scan runs every weekday after the close and alerts run every 10 minutes during market hours. The site URL is public but unlisted; keep it to yourself.
+After that the scan runs every weekday after the close and alerts run every 10 minutes during market hours.
+
+## Members-only access (Whop)
+The site is gated by `netlify/edge-functions/private.ts`: visitors click "Sign in with Whop", and only users with an active membership on one of your Whop products get in. Membership is re-checked hourly, so cancelled members lose access.
+
+In Whop's developer dashboard, create an OAuth app with redirect URI `https://YOUR-SITE/auth/callback` (add the `.netlify.app` URL too if you use it), and create an API key. Then set these Netlify environment variables and redeploy:
+
+| Variable | What |
+|---|---|
+| `WHOP_CLIENT_ID`, `WHOP_CLIENT_SECRET` | the OAuth app's credentials |
+| `WHOP_API_KEY` | server-side API key, used for the membership check |
+| `WHOP_PRODUCT_IDS` | comma-separated `prod_...` ids that grant access |
+| `WHOP_JOIN_URL` | your Whop page, where non-members are sent to buy |
+| `SESSION_SECRET` | long random string that signs the session cookie |
+| `INTERNAL_TOKEN` | long random string; the alert function uses it to read `scan.json` |
+| `SITE_URL` | optional, your public URL (defaults to the request's origin) |
+
+Until all required variables are set the site returns 503 (locked). Whop endpoint URLs are constants at the top of `private.ts`; check them against Whop's current docs if sign-in fails.
 
 Cost: free on a public repo. On a private repo the two workflows use roughly 1,300 of GitHub's 2,000 free monthly minutes, mostly alerts. Change the alerts cron to `*/15` to cut that by a third.
 

@@ -4,7 +4,7 @@
 //
 // Env (Netlify > Project configuration > Environment variables):
 //   DISCORD_WEBHOOK_URL   where alerts go
-//   DASH_USER, DASH_PASS  already set; used to read scan.json through the private gate
+//   INTERNAL_TOKEN        same value as the edge gate's; used to read scan.json through it
 import { readFile } from "node:fs/promises";
 import { getStore } from "@netlify/blobs";
 import { candidates, check, embed, etNow, marketOpen, parseQuote, sessionFraction } from "../lib/alerts-core.mjs";
@@ -30,8 +30,7 @@ async function loadScan() {
     } catch { /* try the next location */ }
   }
   const base = process.env.URL || process.env.DEPLOY_PRIME_URL;
-  const auth = "Basic " + Buffer.from(`${env("DASH_USER")}:${env("DASH_PASS")}`).toString("base64");
-  const r = await fetch(`${base}/scan.json`, { headers: { Authorization: auth } });
+  const r = await fetch(`${base}/scan.json`, { headers: { "X-Internal-Token": env("INTERNAL_TOKEN") || "" } });
   if (!r.ok) throw new Error(`no bundled scan.json and HTTP fallback gave ${r.status}`);
   console.log("scan.json read over HTTP fallback");
   return r.json();
@@ -63,7 +62,7 @@ export default async () => {
   try {
     scan = await loadScan();
   } catch (e) {
-    console.log(`SCAN FETCH FAILED: ${e.message} (URL=${process.env.URL}, user set=${!!env("DASH_USER")}, pass set=${!!env("DASH_PASS")})`);
+    console.log(`SCAN FETCH FAILED: ${e.message} (URL=${process.env.URL}, token set=${!!env("INTERNAL_TOKEN")})`);
     return new Response(`scan fetch failed: ${e.message}`, { status: 500 });
   }
   const rows = candidates(scan);
