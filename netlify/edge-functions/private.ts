@@ -29,16 +29,7 @@ const SESSION_SECONDS = 60 * 60 * 4;
 const RECHECK_SECONDS = 60 * 60;            // re-verify membership hourly
 
 const enc = new TextEncoder();
-// TEMPORARY, FOR TESTING ONLY: values pasted here are used when the Netlify env var of the same
-// name is unset. They live in git history once committed. Before going live, empty this block,
-// set the real values in Netlify env vars, and rotate the client secret.
-const TEST_CONFIG: Record<string, string> = {
-  WHOP_CLIENT_ID: "app_xi5gOpJ4VUOfqU",
-  WHOP_CLIENT_SECRET: "apik_WGwaw9gNRumXh_A2178259_C_36b5aa9bfbcfb4db73857c956dd4655e81817c16a43edb8f747bbb031791db",
-  WHOP_API_KEY: "apik_XgfqTWnKWkMRU_C4045024_C_b02d1f0d1466f4fe78bcbb79a1592a2cc36781979133c21bf486364098ddc3",
-  WHOP_PRODUCT_IDS: "prod_oIa4pWX6yirA8",
-};
-const env = (n: string) => Netlify.env.get(n) || Netlify.env.get(n.toLowerCase()) || TEST_CONFIG[n] || undefined;
+const env = (n: string) => Netlify.env.get(n) || Netlify.env.get(n.toLowerCase());
 const now = () => Math.floor(Date.now() / 1000);
 
 const b64u = (b: ArrayBuffer | Uint8Array) =>
@@ -145,17 +136,15 @@ async function callback(req: Request): Promise<Response> {
     }),
   });
   if (!tokenRes.ok) {
-    // TEMPORARY DEBUG: show Whop's error on the page (contains no secrets) and in Netlify's edge log.
-    const detail = (await tokenRes.text()).slice(0, 300);
-    console.log(`whop token exchange failed: ${tokenRes.status} ${detail}`);
-    return signInPage(`Whop sign-in failed (token step, HTTP ${tokenRes.status}): ${detail.replace(/[<>&]/g, "")}`);
+    console.log(`whop token exchange failed: ${tokenRes.status} ${(await tokenRes.text()).slice(0, 300)}`);
+    return signInPage("Whop sign-in failed. Try again.");
   }
   const { access_token } = await tokenRes.json();
   const infoRes = await fetch(WHOP_USERINFO, { headers: { Authorization: `Bearer ${access_token}` } });
   const sub = infoRes.ok ? (await infoRes.json()).sub : null;
   if (!sub) {
     console.log(`whop userinfo failed: ${infoRes.status}`);
-    return signInPage(`Couldn't read your Whop account (userinfo step, HTTP ${infoRes.status}).`);
+    return signInPage("Couldn't read your Whop account. Try again.");
   }
   if (!(await isMember(sub))) return notMemberPage();
   const session = await sign({ sub, iat: now(), chk: now() });
