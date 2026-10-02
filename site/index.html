@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FiFi's Dashboard</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <svg width="38" height="44" viewBox="0 0 38 44" aria-hidden="true">
+      <path d="M19 1 36 7v13c0 11-7.5 19-17 23C9.5 39 2 31 2 20V7z" fill="none" stroke="#d4af37" stroke-width="2.2"/>
+      <path d="M11 30V18M11 18v-3M19 27V13M19 13v-3M27 24V16" stroke="#d4af37" stroke-width="1.6"/>
+      <rect x="9" y="19" width="4" height="8" fill="#d4af37"/><rect x="17" y="14" width="4" height="10" fill="#d4af37"/><rect x="25" y="17" width="4" height="5" fill="#d4af37"/>
+    </svg>
+    <div>
+      <h1>FiFi's Dashboard</h1>
+      <p id="meta">Loading the latest scan…</p>
+    </div>
+  </header>
+  <div id="notice"></div>
+  <section class="market" id="market" aria-label="Market context"></section>
+
+  <nav class="views" aria-label="Views">
+    <button data-view="prime" aria-pressed="true">Confluence<small></small></button>
+    <button data-view="long" aria-pressed="false">Longs<small></small></button>
+    <button data-view="short" aria-pressed="false">Shorts<small></small></button>
+    <button data-view="groups" aria-pressed="false">Groups</button>
+    <button data-view="rrg" aria-pressed="false">Rotation</button>
+    <button data-view="score" aria-pressed="false">Scorecard</button>
+  </nav>
+
+  <div id="listTools">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Sort">
+        <button data-sort="grade" aria-pressed="true">Grade</button>
+        <button data-sort="rs" aria-pressed="false">RS</button>
+        <button data-sort="chg" aria-pressed="false">Today</button>
+      </div>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="chips" id="chips" aria-label="Filter by badge"></div>
+  </div>
+  <main class="list" id="list"></main>
+  <section id="panel" hidden></section>
+
+  <details>
+    <summary>What the badges mean</summary>
+    <div class="legend" id="legend"></div>
+  </details>
+  <div class="foot">
+    <button class="btn" id="export">Export to TradingView</button>
+    <button class="btn" id="copy">Copy X post</button>
+    <p>Only qualified trades pass. FiFi's TQE</p>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

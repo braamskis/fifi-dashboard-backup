@@ -1,0 +1,8 @@
+{
+  "name": "fifis-dashboard",
+  "private": true,
+  "description": "Netlify functions for FiFi's Dashboard (pivot alerts). The scanner itself is Python.",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.0"
+  }
+}

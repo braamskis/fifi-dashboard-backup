@@ -1,0 +1,55 @@
+name: FiFi's Dashboard intraday scan
+
+# Re-runs the whole scan against today's live bars, so setups that trigger or form
+# during the session show up without waiting for the close. Massive's grouped-daily
+# endpoint returns the in-progress bar; on the Starter plan it is 15 minutes delayed.
+# The evening run overwrites the same day's files, so the end-of-day scan is the one
+# that ends up in the scorecard history.
+
+on:
+  schedule:
+    - cron: "0 14 * * 1-5"    # 10:00 AM ET in summer, 9:00 AM ET in winter
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tqe-repo
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: scanner/requirements.txt
+
+      - run: pip install -r scanner/requirements.txt
+
+      - name: Scan the market on today's bars
+        env:
+          MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
+        run: python scanner/scan.py --force
+
+      - name: Sector rotation (RRG)
+        run: python scanner/rrg.py --out site/rrg.json || echo "RRG skipped"
+
+      - name: Prime ideas, sector alignment and themes
+        run: python scanner/prime.py --scan site/scan.json --rrg site/rrg.json || echo "Prime skipped"
+
+      - name: Commit results (Netlify redeploys on push)
+        run: |
+          git config user.name "fifi-dashboard-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A site/scan.json site/rrg.json site/charts site/history scanner/data
+          git diff --cached --quiet && echo "Nothing new to commit" && exit 0
+          git commit -m "intraday scan"
+          git pull --rebase
+          git push

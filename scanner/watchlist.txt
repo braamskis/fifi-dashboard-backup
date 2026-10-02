@@ -1,0 +1,5 @@
+# Your watchlist: always scanned, tagged WL on the dashboard.
+# One ticker per line, or paste a TradingView export (NASDAQ:AMD,NYSE:MU,...). Lines starting with # are ignored.
+AMD
+MU
+LITE
