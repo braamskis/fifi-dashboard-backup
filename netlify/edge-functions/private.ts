@@ -23,7 +23,9 @@ const WHOP_ACCESS = (userId: string, resource: string) =>
 
 const COOKIE = "fifi_session";
 const OAUTH_COOKIE = "fifi_oauth";
-const SESSION_SECONDS = 60 * 60 * 24 * 7;   // sign in again after a week
+// Sign in on every visit: the cookie has no Max-Age, so the browser drops it when closed,
+// and the server also rejects sessions older than this even if the browser kept it.
+const SESSION_SECONDS = 60 * 60 * 4;
 const RECHECK_SECONDS = 60 * 60;            // re-verify membership hourly
 
 const enc = new TextEncoder();
@@ -77,8 +79,9 @@ function cookies(req: Request): Record<string, string> {
   return out;
 }
 
-const setCookie = (name: string, value: string, maxAge: number) =>
-  `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+// maxAge omitted = browser-session cookie (cleared when the browser closes)
+const setCookie = (name: string, value: string, maxAge?: number) =>
+  `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax${maxAge === undefined ? "" : `; Max-Age=${maxAge}`}`;
 
 function origin(req: Request): string {
   return (env("SITE_URL") || new URL(req.url).origin).replace(/\/$/, "");
@@ -121,7 +124,7 @@ async function login(req: Request): Promise<Response> {
   const url = new URL(WHOP_AUTHORIZE);
   url.search = new URLSearchParams({
     response_type: "code", client_id: env("WHOP_CLIENT_ID")!, redirect_uri: `${origin(req)}/auth/callback`,
-    scope: "openid", state, nonce, code_challenge: challenge, code_challenge_method: "S256",
+    scope: "openid", prompt: "login", state, nonce, code_challenge: challenge, code_challenge_method: "S256",
   }).toString();
   const tmp = await sign({ state, verifier, exp: now() + 600 });
   return new Response(null, { status: 302, headers: { Location: url.toString(), "Set-Cookie": setCookie(OAUTH_COOKIE, tmp, 600), "Cache-Control": "no-store" } });
@@ -157,7 +160,7 @@ async function callback(req: Request): Promise<Response> {
   if (!(await isMember(sub))) return notMemberPage();
   const session = await sign({ sub, iat: now(), chk: now() });
   const headers = new Headers({ Location: "/", "Cache-Control": "no-store" });
-  headers.append("Set-Cookie", setCookie(COOKIE, session, SESSION_SECONDS));
+  headers.append("Set-Cookie", setCookie(COOKIE, session));
   headers.append("Set-Cookie", setCookie(OAUTH_COOKIE, "", 0));
   return new Response(null, { status: 302, headers });
 }
@@ -197,7 +200,7 @@ export default async (req: Request, context: Context) => {
   const out = new Response(res.body, res);
   out.headers.set("X-Robots-Tag", "noindex, nofollow");
   out.headers.set("Cache-Control", "private, no-cache");
-  if (refreshed) out.headers.append("Set-Cookie", setCookie(COOKIE, refreshed, SESSION_SECONDS));
+  if (refreshed) out.headers.append("Set-Cookie", setCookie(COOKIE, refreshed));
   return out;
 };
 
