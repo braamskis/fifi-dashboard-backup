@@ -31,8 +31,8 @@ const enc = new TextEncoder();
 // name is unset. They live in git history once committed. Before going live, empty this block,
 // set the real values in Netlify env vars, and rotate the client secret.
 const TEST_CONFIG: Record<string, string> = {
-  WHOP_CLIENT_ID: "",
-  WHOP_CLIENT_SECRET: "",
+  WHOP_CLIENT_ID: "app_xi5gOpJ4VUOfqU",
+  WHOP_CLIENT_SECRET: "apik_WGwaw9gNRumXh_A2178259_C_36b5aa9bfbcfb4db73857c956dd4655e81817c16a43edb8f747bbb031791db",
   WHOP_PRODUCT_IDS: "",
 };
 const env = (n: string) => Netlify.env.get(n) || Netlify.env.get(n.toLowerCase()) || TEST_CONFIG[n] || undefined;
